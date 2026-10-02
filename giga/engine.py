@@ -48,6 +48,7 @@ class Engine:
         correct: bool = True,
         history: list[dict] | None = None,
         files: list[dict] | None = None,
+        owner: str = "",
     ) -> dict[str, Any]:
         """Обрабатывает запрос пользователя через облачный нейросетевой кластер."""
         question = (question or "").strip()
@@ -76,7 +77,7 @@ class Engine:
         effective_prompt = "\n\n".join(files_blocks) + ("\n\n" + question if question else "\n\nПроанализируй прикрепленные файлы/фото и дай детальный ответ.") if files_blocks else question
 
         with self.lock:
-            thread = self.store.ensure(thread_id, tier=tier)
+            thread = self.store.ensure(thread_id, tier=tier, owner=owner)
             thread_context = history if (history and len(history) > 0) else thread.context(limit=14)
 
             if capture:

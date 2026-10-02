@@ -35,6 +35,13 @@ _lock = threading.Lock()
 _active_trainer = None
 
 
+def _get_owner(handler) -> str:
+    """Extract username from Authorization header for per-user chat isolation."""
+    auth_hdr = handler.headers.get("Authorization") or handler.headers.get("x-auth-token") or ""
+    user = auth_mod.get_user_by_token(auth_hdr)
+    return user.get("username", "") if user else ""
+
+
 def stop_active_training():
     _stop.set()
     global _active_trainer
@@ -195,8 +202,10 @@ class Handler(BaseHTTPRequestHandler):
                                 ready=[t for t in tiers.ORDER
                                        if os.path.exists(train_mod.paths(t)["ckpt"])]))
             elif u.path == "/api/threads":
+                owner = _get_owner(self)
                 self._json(dict(threads=e.store.list(order=q.get("order", ["heat"])[0],
-                                                     limit=int(q.get("limit", ["80"])[0]))))
+                                                     limit=int(q.get("limit", ["80"])[0]),
+                                                     owner=owner)))
             elif u.path == "/api/thread":
                 t = e.store.get(q.get("id", [""])[0])
                 self._json(t.summary(deep=True) if t else {"error": "нет такой нити"}, 200 if t else 404)
@@ -289,12 +298,14 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/benchmarks/run":
                 self._json(bench_mod.run_all_benchmarks())
             elif u.path == "/api/chat":
+                owner = _get_owner(self)
                 res = e.ask(b.get("text", ""), tier=b.get("tier") or "gigamogg",
                             thread_id=b.get("thread"), temperature=float(b.get("temperature", 0.7)),
                             capture=bool(b.get("capture", True)),
                             max_tokens=b.get("max_tokens"),
                             history=b.get("history"),
-                            files=b.get("files"))
+                            files=b.get("files"),
+                            owner=owner)
                 self._json(res)
             elif u.path == "/api/train":
                 if STATE["status"] in ("training", "preparing"):

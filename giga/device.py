@@ -13,24 +13,30 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-import torch
+try:
+    import torch
+    HAS_TORCH = True
+except ImportError:
+    torch = None
+    HAS_TORCH = False
 
 # приоритет видеокарты: быстрые ядра, TF32 и «математика на максимум»
-if os.name != "nt":      # expandable_segments есть только на Linux
-    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
-os.environ.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")
+if HAS_TORCH:
+    if os.name != "nt":
+        os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    os.environ.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")
 
 
 @dataclass
 class Plan:
-    device: torch.device = field(default_factory=lambda: torch.device("cpu"))
+    device: object = field(default_factory=lambda: torch.device("cpu") if HAS_TORCH else "cpu")
     name: str = "CPU"
     kind: str = "cpu"                 # cuda | mps | cpu
     vram_mb: float = 0.0
     ram_mb: float = 0.0
     gpus: int = 0
     amp: bool = False
-    amp_dtype: torch.dtype = torch.float32
+    amp_dtype: object = field(default_factory=lambda: torch.float32 if HAS_TORCH else "float32")
     tf32: bool = False
     hybrid: bool = False              # GPU + CPU одновременно
     offload_optimizer: bool = False

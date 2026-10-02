@@ -82,6 +82,7 @@ class Thread:
         self.fixed: int = int(data.get("fixed", 0))      # сколько раз модель сама исправлялась
         self.heat: float = float(data.get("heat", 0.0))
         self.pinned: bool = bool(data.get("pinned"))
+        self.owner: str = data.get("owner", "")           # привязка к пользователю (username)
         if not self.vector:
             self.recompute()
 
@@ -144,7 +145,7 @@ class Thread:
         d = dict(id=self.id, title=self.title, created=self.created, updated=self.updated,
                  size=self.size, tier=self.tier, tags=self.tags, rating=round(self.rating, 3),
                  heat=round(self.alive, 4), fixed=self.fixed, pinned=self.pinned,
-                 links=self.links, preview=self.last[:140])
+                 links=self.links, preview=self.last[:140], owner=self.owner)
         if deep:
             d["turns"] = self.turns
             d["keywords"] = self.tags
@@ -154,7 +155,7 @@ class Thread:
         return dict(id=self.id, title=self.title, created=self.created, updated=self.updated,
                     turns=self.turns, tier=self.tier, tags=self.tags, vector=self.vector,
                     links=self.links, rating=self.rating, fixed=self.fixed, heat=self.heat,
-                    pinned=self.pinned)
+                    pinned=self.pinned, owner=self.owner)
 
 
 class ThreadStore:
@@ -200,9 +201,9 @@ class ThreadStore:
             self.save()
 
     # ---------------------------------------------------------------- нити
-    def create(self, title: str | None = None, tier: str = "mid", tags=None) -> Thread:
+    def create(self, title: str | None = None, tier: str = "mid", tags=None, owner: str = "") -> Thread:
         with self.lock:
-            t = Thread(dict(title=title or "Новая нить", tier=tier, tags=list(tags or [])))
+            t = Thread(dict(title=title or "Новая нить", tier=tier, tags=list(tags or []), owner=owner))
             self.threads[t.id] = t
             self.maybe_save()
             return t
@@ -210,12 +211,12 @@ class ThreadStore:
     def get(self, tid: str) -> Thread | None:
         return self.threads.get(tid)
 
-    def ensure(self, tid: str | None, tier: str = "mid") -> Thread:
+    def ensure(self, tid: str | None, tier: str = "mid", owner: str = "") -> Thread:
         with self.lock:
             if tid and tid in self.threads:
                 return self.threads[tid]
             t = self.threads.get(tid) if tid else None
-            return t or self.create(tier=tier)
+            return t or self.create(tier=tier, owner=owner)
 
     def drop(self, tid: str) -> bool:
         with self.lock:
@@ -246,9 +247,12 @@ class ThreadStore:
             return t.pinned
 
     # ---------------------------------------------------------------- поиск
-    def list(self, order: str = "heat", limit: int = 100) -> list[dict]:
+    def list(self, order: str = "heat", limit: int = 100, owner: str = "") -> list[dict]:
         with self.lock:
             items = list(self.threads.values())
+        # Фильтрация по владельцу: каждый пользователь видит только свои чаты
+        if owner:
+            items = [t for t in items if t.owner == owner or t.owner == ""]
         keys = {
             "heat": lambda t: (t.pinned, t.alive),
             "new": lambda t: (t.pinned, t.updated),
