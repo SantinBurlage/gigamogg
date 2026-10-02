@@ -2209,22 +2209,77 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    /* ── Mobile hamburger button (hidden on desktop) ── */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1100;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(17, 19, 24, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #ededed;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+    .mobile-overlay.open { display: block; }
+
     @media(max-width: 860px) {
+      .mobile-menu-btn { display: flex; }
+
       .app-shell {
         grid-template-columns: 1fr;
+        gap: 0;
       }
 
       aside {
-        display: none;
+        position: fixed;
+        top: 0; left: -280px;
+        width: 270px;
+        height: 100dvh;
+        z-index: 1000;
+        transition: left 0.28s cubic-bezier(.4, 0, .2, 1);
+        box-shadow: 8px 0 32px rgba(0,0,0,0.6);
+      }
+      aside.open { left: 0; }
+
+      .aside-right {
+        display: none !important;
+      }
+
+      .main-content {
+        padding-top: 56px;
       }
 
       .input-floating-bar {
         left: 50%;
-        width: calc(100vw - 32px);
+        width: calc(100vw - 20px);
+        bottom: 10px;
+        border-radius: 14px;
+      }
+
+      .chat-input-wrap textarea {
+        font-size: 16px; /* prevents iOS zoom */
       }
 
       .quick-cards {
         grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 0 8px;
       }
 
       .train-grid {
@@ -2232,6 +2287,52 @@
       }
 
       .hw-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-title {
+        font-size: 28px !important;
+      }
+
+      .hero-sub {
+        font-size: 13px !important;
+      }
+
+      .code-block-wrapper pre {
+        font-size: 12px;
+        overflow-x: auto;
+      }
+
+      .msg-item {
+        padding: 10px 8px;
+      }
+
+      .tab-panel {
+        padding: 12px 8px;
+      }
+
+      .bench-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      #authModal > div {
+        width: 92vw !important;
+        padding: 20px !important;
+      }
+
+      .top-bar {
+        padding-left: 52px;
+      }
+    }
+
+    @media(max-width: 480px) {
+      .hw-cards {
+        grid-template-columns: 1fr;
+      }
+      .bench-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .quick-cards {
         grid-template-columns: 1fr;
       }
     }
@@ -2239,6 +2340,16 @@
 </head>
 
 <body>
+
+  <!-- Mobile hamburger button -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
   <div class="app-shell">
     <!-- САЙДБАР (CHATGPT / GEMINI STYLE) -->
@@ -2964,6 +3075,11 @@ console.log(data.choices[0].message.content);</code></pre>
     const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     let conversationHistory = [];
+
+    function getUserStorageKey(key) {
+      const u = currentUser ? currentUser.username : '__anon__';
+      return 'giga_' + u + '_' + key;
+    }
     let currentUser = null;
     let currentLanguage = localStorage.getItem('giga_lang') || 'ru';
 
@@ -3072,10 +3188,11 @@ console.log(data.choices[0].message.content);</code></pre>
 
     /* ── Переключение вкладок ── */
     function switchTab(tabId) {
+      closeMobileSidebar();
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
       document.querySelectorAll('.view-panel').forEach(p => p.classList.toggle('active', p.id === 'p-' + tabId));
       if (tabId === 'ml') resizeMlCanvas();
-      if (tabId === 'train') 
+      if (tabId === 'train') {}
       if (tabId === 'apikeys') loadApiKeys();
       playCyberSound('blip');
     }
@@ -3489,7 +3606,7 @@ console.log(data.choices[0].message.content);</code></pre>
         if (res.html_preview) {
           loadHtmlIntoStudio(res.html_preview, 'site.html');
           try {
-            localStorage.setItem('giga_latest_preview_html', res.html_preview);
+            localStorage.setItem(getUserStorageKey('latest_preview_html'), res.html_preview);
           } catch(e) {}
         }
 
@@ -4857,6 +4974,7 @@ console.log(data.choices[0].message.content);</code></pre>
     }
 
     async function loadThread(id) {
+      closeMobileSidebar();
       const res = await api('/api/thread?id=' + encodeURIComponent(id));
       if (res.error) return;
 
@@ -5114,8 +5232,14 @@ console.log(data.choices[0].message.content);</code></pre>
 
       currentUser = res.user;
       closeAuthModal();
+      conversationHistory = [];
+      activeThreadId = null;
+      messagesList.innerHTML = '';
+      welcomeHero.style.display = 'flex';
+      messagesList.style.display = 'none';
       applyRolePermissions(currentUser);
       updateUserProfileUI();
+      loadSidebarThreads();
       playCyberSound('success');
     }
 
@@ -5123,8 +5247,14 @@ console.log(data.choices[0].message.content);</code></pre>
       await api('/api/auth/logout', {});
       localStorage.removeItem('giga_session_token');
       currentUser = null;
+      conversationHistory = [];
+      activeThreadId = null;
+      messagesList.innerHTML = '';
+      welcomeHero.style.display = 'flex';
+      messagesList.style.display = 'none';
       applyRolePermissions(null);
       updateUserProfileUI();
+      loadSidebarThreads();
       playCyberSound('blip');
     }
 
@@ -5468,6 +5598,22 @@ console.log(data.choices[0].message.content);</code></pre>
       }
     });
 
+    /* ── Мобильный сайдбар ── */
+    function toggleMobileSidebar() {
+      const aside = document.querySelector('aside');
+      const overlay = $('mobileOverlay');
+      if (aside) aside.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('open');
+    }
+    function closeMobileSidebar() {
+      const aside = document.querySelector('aside');
+      const overlay = $('mobileOverlay');
+      if (aside) aside.classList.remove('open');
+      if (overlay) overlay.classList.remove('open');
+    }
+    // Close sidebar when tab is selected on mobile
+    const origSwitchTab = typeof switchTab === 'function' ? switchTab : null;
+
     /* ── Инициализация ── */
     (async function init() {
       checkAuthStatus();
@@ -5475,7 +5621,7 @@ console.log(data.choices[0].message.content);</code></pre>
       applyLanguage(currentLanguage);
 
       // Восстановление последнего сгенерированного сайта в Веб-Студии
-      const savedHtml = localStorage.getItem('giga_latest_preview_html');
+      const savedHtml = localStorage.getItem(getUserStorageKey('latest_preview_html'));
       if (savedHtml) {
         loadHtmlIntoStudio(savedHtml, 'site.html');
       }
