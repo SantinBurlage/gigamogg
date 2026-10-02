@@ -1,0 +1,33 @@
+# Сборки и тяжелые бинарники (.exe, PyInstaller)
+dist/
+build/
+*.spec
+
+# Огромные веса моделей и состояния оптимизатора (весят гигабайты)
+models/*.pt
+models/*.opt.pt
+models/*.tmp
+*.pt
+*.tmp
+
+# Кэш токенизатора и датасеты
+cache/
+_selftest/
+corpus.txt
+data.txt
+
+# Базы данных и локальная история
+giga.db
+threads.json
+lessons.json
+keys.json
+history.json
+
+# Временные файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Скрипты отладки
+scratch/
