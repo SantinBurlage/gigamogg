@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  gigamogg:
+    build: .
+    container_name: gigamogg-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./giga.db:/app/giga.db
+      - ./threads.json:/app/threads.json
