@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кофейня "Глубокий Аромат"</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #090a0d;
+            color: #ffffff;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background: #12141c;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #a1a1aa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #ffffff;
+        }
+
+        main {
+            padding: 40px 5%;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .menu-section {
+            margin-bottom: 60px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #1a1d26;
+            color: #a1a1aa;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #ffffff;
+            color: #090a0d;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            background: #12141c;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.3s;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .calculator {
+            background: #12141c;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 60px;
+        }
+
+        .calculator h2 {
+            margin-bottom: 20px;
+        }
+
+        .calc-inputs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .calc-inputs input {
+            flex: 1;
+            padding: 10px;
+            background: #1a1d26;
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #ffffff;
+        }
+
+        .result {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 5%;
+            background: #12141c;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a1d26;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: #12141c;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+            }
+
+            nav.active {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Глубокий Аромат</div>
+        <nav id="nav">
+            <a href="#menu">Меню</a>
+            <a href="#calculator">Калькулятор</a>
+            <a href="#contacts">Контакты</a>
+        </nav>
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Идеальный кофе для вашего утра</h1>
+            <p>Откройте для себя уникальные вкусы и ароматы в уютной атмосфере</p>
+        </section>
+
+        <section class="menu-section" id="menu">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="coffee">Кофе</button>
+                <button class="filter-btn" data-filter="tea">Чай</button>
+                <button class="filter-btn" data-filter="dessert">Десерты</button>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-item" data-category="coffee">
+                    <h3>Эспрессо</h3>
+                    <p>Классический итальянский эспрессо</p>
+                    <span>150₽</span>
+                </div>
+                <div class="menu-item" data-category="coffee">
+                    <h3>Латте</h3>
+                    <p>Кофе с молочной пенкой</p>
+                    <span>200₽</span>
+                </div>
+                <div class="menu-item" data-category="tea">
+                    <h3>Зеленый чай</h3>
+                    <p>Свежесобранные листья</p>
+                    <span>120₽</span>
+                </div>
+                <!-- Добавьте больше элементов меню -->
+            </div>
+        </section>
+
+        <section class="calculator" id="calculator">
+            <h2>Калькулятор заказа</h2>
+            <div class="calc-inputs">
+                <input type="number" id="quantity" placeholder="Количество" min="1">
+                <input type="number" id="price" placeholder="Цена за шт." min="0">
+            </div>
+            <button class="filter-btn" onclick="calculateTotal()">Рассчитать</button>
+            <div class="result" id="total"></div>
+        </section>
+    </main>
+
+    <footer id="contacts">
+        <p>Контакты: +7 (999) 123-45-67 | ул. Кофейная, 10</p>
+        <button class="filter-btn" onclick="openModal()">Обратная связь</button>
+    </footer>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3>Обратная связь</h3>
+            <form>
+                <input type="text" placeholder="Ваше имя" required>
+                <input type="email" placeholder="Email" required>
+                <textarea placeholder="Сообщение" required></textarea>
+                <button type="submit" class="filter-btn">Отправить</button>
+            </form>
+            <button class="filter-btn" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menuToggle');
+            const nav = document.getElementById('nav');
+
+            menuToggle.addEventListener('click', () => {
+                nav.classList.toggle('active');
+            });
+
+            const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
+            const menuItems = document.querySelectorAll('.menu-item');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    const filter = button.dataset.filter;
+                    menuItems.forEach(item => {
+                        if (filter === 'all' || item.dataset.category === filter) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            function calculateTotal() {
+                const quantity = document.getElementById('quantity').value;
+                const price = document.getElementById('price').value;
+                const total = document.getElementById('total');
+
+                if (quantity && price) {
+                    total.textContent = `Итого: ${quantity * price}₽`;
+                } else {
+                    total.textContent = 'Введите значения';
+                }
+            }
+
+            function openModal() {
+                document.getElementById('modal').style.display = 'flex';
+            }
+
+            function closeModal() {
+                document.getElementById('modal').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
